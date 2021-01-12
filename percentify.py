@@ -1,18 +1,8 @@
-def percentify(itr):
-    newItr = []
-    maxNum = float(itr[1][-1])
-    minNum = float(itr[1][-1])
-    for line in itr:
-        if float(line[-1]) > maxNum:
-            maxNum = float(line[-1])
-        if float(line[-1]) < minNum:
-            minNum = float(line[-1])
-    maxNum -= minNum
+def percentify(list_file):
+    by_second_element = lambda second_element: float(second_element[1])
+    min_value = min(list_file, key=by_second_element)[1]
+    max_value = max(list_file, key=by_second_element)[1] - min_value
+    for line in list_file:
+        ret_num = ((line[-1] - min_value) / max_value) * 100
+        line[1] = ret_num
 
-    for line in itr:
-        newNum = round((((float(line[-1]) - minNum) / maxNum ) * 100), 2)
-        newLine = line
-        newLine[-1] = str(newNum)
-        newItr.append(newLine)
-
-    return newItr
