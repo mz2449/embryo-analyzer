@@ -7,6 +7,7 @@ import stats
 import time
 import sys
 import os
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -88,6 +89,10 @@ def main():
             print('\nIf you didn\'t want to do anything, why did you run me?')
             sys.exit()
 
+        plt.plot([line[0] for line in ret_list], [line[1] for line in ret_list])
+        plt.axis([0, 100, 0, 1.5])
+        plt.show()
+
         # final section
         new_name = input('New .csv file name?')
         while True:
@@ -115,4 +120,5 @@ def main():
             sys.exit()
 
 
-main()
+if __name__ == '__main__':
+    main()
