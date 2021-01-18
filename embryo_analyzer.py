@@ -3,7 +3,6 @@ import normalizer
 import csv_functions
 import pixel_to_embryo_length as pixel
 import percentify
-import stats
 import time
 import sys
 import os
