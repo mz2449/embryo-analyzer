@@ -7,7 +7,7 @@ def denest_list(lst):  # brings all nested lists to the outside
 
 
 def sort_by_first_element(lst):  # sort by the first element
-    ret_list = sorted(lst, key=lambda element: float(element[0]), reverse=True)
+    ret_list = sorted(lst, key=lambda first_element: float(first_element[0]), reverse=True)
     return ret_list
 
 

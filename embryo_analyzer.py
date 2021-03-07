@@ -7,6 +7,123 @@ import time
 import sys
 import os
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+import numpy as np
+
+
+def fit_gaussian():
+    p_file = [['', 'Stripe 2', 'Stripe 3', 'Stripe 7']]
+    files = input('files?')
+
+    left_window_23 = float(input('stripe23 left window'))
+    right_window_23 = float(input('stripe23 right window'))
+
+    left_window_7 = float(input('stripe7 left window'))
+    right_window_7 = float(input('stripe7 right window'))
+
+    norm_list = input('normalizing values (keep in order)').split()
+
+    list_of_files = files.split()
+    file_count = 0
+
+    while True:
+        file_list = list()
+        file_path = ''
+
+        # user input section
+        while True:  # file paths loop
+            try:
+                file_path = list_of_files[file_count]
+                file_list.append(csv_functions.csv_open(file_path))
+                break
+            except FileNotFoundError:
+                if file_path != 'stop':
+                    print('\nFile not found, recheck name or path')
+                continue
+            finally:
+                if file_path.lower() == 'restart':
+                    print('restarting... \n\n\n')
+                    os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+
+        norm_value = float(norm_list[file_count])
+
+        # analysis section
+        start_time = time.process_time()
+        ret_list = list()
+
+        for file in file_list:  # normalization
+            ret_file = pixel.pixel_to_embryo_length(file)
+
+            normalizer.normalize(ret_file, [['Mean'], [norm_value]])
+
+            ret_list.append(ret_file)
+
+        ret_list = averager.averager(ret_list)
+
+        x = [line[0] for line in ret_list]
+        y = [line[1] for line in ret_list]
+
+        left_window7 = x.index(left_window_7)
+        right_window7 = x.index(right_window_7) + 1
+
+        left_window23 = x.index(left_window_23)
+        right_window23 = x.index(right_window_23) + 1
+
+        x7 = x[left_window7:right_window7]
+        y7 = y[left_window7:right_window7]
+
+        x23 = x[left_window23:right_window23]
+        y23 = y[left_window23:right_window23]
+
+        # finding stdev of peaks 2 and 3
+        stdev_list = ret_list[x.index(60):x.index(50)]
+        xcor_ymin = min(stdev_list, key=lambda value: value[1])[0]
+        stdev2 = np.std(y[left_window23:x.index(xcor_ymin)])
+        stdev3 = np.std(y[x.index(xcor_ymin):right_window23])
+
+        plt.figure(1, figsize=(10, 7.5))
+        plt.xlabel('Embryo Length')
+        plt.ylabel('Normalized Intensity')
+        plt.title('Fit of Stripe 7')
+        plt.axis([100, 0, 0, 2])
+        plt.scatter(x, y, color='k', label='data', marker='.', s=1)
+
+        p7, p7_cov = curve_fit(gauss_7, x7, y7, p0=[0.981, 21.8, np.std(y7)])
+        p23, p23_cov = curve_fit(gauss_23, x23, y23, p0=[1.174, 60.9, stdev2, 0, 50.7, stdev3])
+
+        # noinspection PyTypeChecker.973
+        plt.plot(x[right_window23:x.index(0)], gauss_7(x[right_window23:x.index(0)], *p7), color='r',
+                 label='fit for 7th stripe')
+        plt.plot(x[0: left_window7], gauss_23(x[0:left_window7], *p23), color='r', label='fit for 2nd and 3rd stripe')
+
+        plt.legend(loc='best')
+
+        plt.savefig(file_path.strip('.csv') + '.png', dpi=600)
+
+        plt.clf()
+
+        p_file.append(['a', p23[0], p23[3], p7[0], file_path.split('/')[-1]])
+        p_file.append(['x0', p23[1], p23[4], p7[1]])
+        p_file.append(['sigma', p23[2], p23[5], p7[2]])
+        p_file.append(['', '', '', ''])
+
+        csv_functions.make_new_csv('/'.join(file_path.split('/')[:-1]) + '/' +
+                                   file_path.split('/')[-1].split('_')[0] + 'params', p_file)
+
+        file_count += 1
+
+        stop_time = time.process_time()
+
+        print('\nFinished in', round((stop_time - start_time), 5), 'seconds!')
+
+
+def gauss_7(x, a, x0, sigma):
+    return a * np.exp(- (x - x0) ** 2 / (2 * sigma ** 2))
+
+
+def gauss_23(x, a_1, x0_1, sigma_1, a_2, x0_2, sigma_2):
+    return a_1 * np.exp(- (x - x0_1) ** 2 / (2 * sigma_1 ** 2)) + \
+           a_2 * np.exp(- (x - x0_2) ** 2 / (2 * sigma_2 ** 2))
 
 
 def main():
@@ -25,12 +142,18 @@ def main():
                 if file_path != '' and file_path.lower() != 'restart':
                     print('\nFile not found, recheck name or path')
             finally:
+                if file_path == 'gaussian':
+                    break
                 if file_path.lower() == 'restart':
                     print('restarting... \n\n\n')
                     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
                 if file_path == '':
                     print('All Files Selected')
                     break
+
+        if file_path == 'gaussian':
+            fit_gaussian()
+            continue
 
         while True:  # asking for normalization loop
             answer_norm = input('\nWould you like to normalize your file? (y/n)')
@@ -74,11 +197,7 @@ def main():
 
             ret_list.append(ret_file)
 
-        stdev = stats.st_dev(ret_list)
-
         ret_list = averager.averager(ret_list)
-
-        # ret_list[0] += stdev
 
         stop_time = time.process_time()
 
@@ -89,7 +208,7 @@ def main():
             sys.exit()
 
         plt.plot([line[0] for line in ret_list], [line[1] for line in ret_list])
-        plt.axis([0, 100, 0, 1.5])
+        plt.axis([100, 0, 0, 1.5])
         plt.show()
 
         # final section
@@ -120,4 +239,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    fit_gaussian()
+    # main()
