@@ -40,6 +40,10 @@ def fit_gaussian():
                 if file_path != 'stop':
                     print('\nFile not found, recheck name or path')
                 continue
+            except IndexError:
+                if file_count > len(file_list):
+                    sys.exit('All done :)')
+                print('uh oh')
             finally:
                 if file_path.lower() == 'restart':
                     print('restarting... \n\n\n')
@@ -114,7 +118,8 @@ def fit_gaussian():
 
         stop_time = time.process_time()
 
-        print('\nFinished in', round((stop_time - start_time), 5), 'seconds!')
+        print('\n' + file_path.strip('.csv'))
+        print('Finished in', round((stop_time - start_time), 5), 'seconds!')
 
 
 def gauss_7(x, a, x0, sigma):
