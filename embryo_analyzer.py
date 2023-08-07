@@ -92,10 +92,9 @@ def fit_gaussian():
         plt.axis([100, 0, 0, 2])
         plt.scatter(x, y, color='k', label='data', marker='.', s=1)
 
-        p7, p7_cov = curve_fit(gauss_7, x7, y7, p0=[0.981, 21.8, np.std(y7)])
-        p23, p23_cov = curve_fit(gauss_23, x23, y23, p0=[1.174, 60.9, stdev2, 0, 50.7, stdev3])
-
-        # noinspection PyTypeChecker.973
+        p7, p7_cov = curve_fit(gauss_7, x7, y7, p0=[0.981, 21.8, np.std(y7)]) #p0 values are guesses for gaussian parameters to achieve to most accurate result
+        p23, p23_cov = curve_fit(gauss_23, x23, y23, p0=[1.174, 60.9, stdev2, 0, 50.7, stdev3]) #p0 values are guesses for gaussian parameters to achieve to most accurate result
+        
         plt.plot(x[right_window23:x.index(0)], gauss_7(x[right_window23:x.index(0)], *p7), color='r',
                  label='fit for 7th stripe')
         plt.plot(x[0: left_window7], gauss_23(x[0:left_window7], *p23), color='r', label='fit for 2nd and 3rd stripe')
@@ -246,5 +245,10 @@ def main():
 
 
 if __name__ == '__main__':
-    fit_gaussian()
-    # main()
+    objective = input("Fit Gaussian(g), or Analyze Embryos(a)")
+    if objective == "g":
+        fit_gaussian()
+    if objective == "a":
+        main()
+    else:
+        print("\nExiting... Please choose an appropriate objective")
