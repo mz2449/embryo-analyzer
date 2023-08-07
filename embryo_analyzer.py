@@ -204,6 +204,8 @@ def main():
 
         ret_list = averager.averager(ret_list)
 
+        # ret_list[0] += stdev
+
         stop_time = time.process_time()
 
         print('\nFinished in', round((stop_time - start_time), 5), 'seconds!')
