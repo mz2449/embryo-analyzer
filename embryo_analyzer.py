@@ -101,6 +101,8 @@ def fit_gaussian():
 
         plt.legend(loc='best')
 
+        plt.show()
+
         plt.savefig(file_path.strip('.csv') + '.png', dpi=600)
 
         plt.clf()
@@ -112,6 +114,8 @@ def fit_gaussian():
 
         csv_functions.make_new_csv('/'.join(file_path.split('/')[:-1]) + '/' +
                                    file_path.split('/')[-1].split('_')[0] + 'params', p_file)
+        
+        csv_functions.make_new_csv(file_path.strip('.csv') + '_ANALYZED.csv',ret_list)
 
         file_count += 1
 
@@ -146,8 +150,6 @@ def main():
                 if file_path != '' and file_path.lower() != 'restart':
                     print('\nFile not found, recheck name or path')
             finally:
-                if file_path == 'gaussian':
-                    break
                 if file_path.lower() == 'restart':
                     print('restarting... \n\n\n')
                     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
@@ -187,6 +189,8 @@ def main():
             else:
                 print('\nPlease enter either \'y\' (yes) or \'n\' (no)')
                 continue
+        
+        new_path = input('\nPath to analyzed files?')
 
         # analysis section
         start_time = time.process_time()
@@ -198,6 +202,8 @@ def main():
                 normalizer.normalize(ret_file, file_norm)
             if answer_percentify == 'y':
                 percentify.percentify(ret_file)
+
+            csv_functions.make_new_csv(new_path + str(file_list.index(file) + 1) + '_analyzed', averager.averager([ret_file]))
 
             ret_list.append(ret_file)
 
@@ -220,7 +226,6 @@ def main():
         # final section
         new_name = input('New .csv file name?')
         while True:
-            new_path = input('\nPath to new .csv file?')
             try:
                 if new_name[-1] == "/":
                     csv_functions.make_new_csv(new_path + new_name, ret_list)
@@ -230,6 +235,7 @@ def main():
                 break
             except:
                 print('Error creating new .csv, try different path')
+                new_path = input('\nPath to analyzed files?')
 
         while True:  # asking to continue loop
             answer_continue = input('\nDo you have more to analyze (y/n): ')
